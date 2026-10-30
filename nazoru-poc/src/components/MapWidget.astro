@@ -9,8 +9,10 @@ interface Props {
   areaQuery: string;
   /** 'search': update the page in place; 'navigate': go to the (noindex) search page. */
   mode: 'search' | 'navigate';
+  /** Where the bypass link jumps to (WCAG 2.4.1): the results heading. */
+  skipTo?: string;
 }
-const { areaQuery, mode } = Astro.props;
+const { areaQuery, mode, skipTo = '#results-heading' } = Astro.props;
 ---
 <nazoru-map
   data-api-key={GOOGLE_MAPS_API_KEY}
@@ -21,6 +23,7 @@ const { areaQuery, mode } = Astro.props;
   data-search-url="/nagoya/search/"
   data-points-url="/nagoya/search/points.json"
 >
+  <a class="skip-map" href={skipTo} data-skip>地図をスキップして物件一覧へ</a>
   <section class="map-widget" aria-labelledby="map-heading">
     <h2 id="map-heading">地図で探す</h2>
     <p id="map-help" class="map-help">地図を動かして「このエリアで検索」を押すと、表示している範囲の物件を探せます。</p>
@@ -77,6 +80,8 @@ const { areaQuery, mode } = Astro.props;
 </script>
 
 <style>
+  .skip-map { position: absolute; left: -9999px; }
+  .skip-map:focus { position: static; display: inline-flex; align-items: center; min-height: var(--target); margin-top: 1rem; }
   .map-help { margin: 0 0 0.5rem; }
   .map-toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; min-height: calc(var(--target) + 0.5rem); }
   .map-toolbar p { margin: 0; color: var(--ink-muted); }

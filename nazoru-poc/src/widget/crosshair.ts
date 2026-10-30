@@ -118,7 +118,12 @@ export function createCrosshair(ctx: ModeContext): Mode {
     if (!active) return false;
     if (name in PAN) {
       const [dx, dy] = PAN[name];
-      map.panBy(dx * PAN_PX, dy * PAN_PX);
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const div = map.getDiv();
+        map.setCenter(ctx.toLatLng(div.clientWidth / 2 + dx * PAN_PX, div.clientHeight / 2 + dy * PAN_PX)); // jump, no animation
+      } else {
+        map.panBy(dx * PAN_PX, dy * PAN_PX);
+      }
     } else if (name === 'add-vertex') add();
     else if (name === 'undo-vertex') undo();
     else if (name === 'finish') finish();

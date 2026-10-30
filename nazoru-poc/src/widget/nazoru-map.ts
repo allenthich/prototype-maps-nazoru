@@ -24,6 +24,14 @@ export class NazoruMap extends HTMLElement implements MapHost {
     });
     this.#observer.observe(this.querySelector('[data-map-canvas]') ?? this);
 
+    // Bypass link: fragment navigation alone doesn't reliably move focus to a tabindex=-1 target.
+    this.querySelector<HTMLAnchorElement>('a[data-skip]')?.addEventListener('click', (event) => {
+      const target = document.querySelector<HTMLElement>((event.currentTarget as HTMLAnchorElement).hash);
+      if (!target) return;
+      event.preventDefault();
+      target.focus();
+    });
+
     this.addEventListener('click', (event) => {
       const action = (event.target as Element).closest<HTMLButtonElement>('button[data-action]')?.dataset.action;
       if (action) void this.engine().then((engine) => engine?.action(action));

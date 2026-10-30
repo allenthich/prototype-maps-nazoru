@@ -1,6 +1,6 @@
 # Plan: なぞる area search PoC
 
-Implements `SPEC.md` (v2, approved 2026-10-30). Status: **approved 2026-10-30. Tasks 0–5 done (checkpoint); 6–9 pending.**
+Implements `SPEC.md` (v2, approved 2026-10-30). Status: **approved 2026-10-30. All tasks (0–9) done.**
 
 ## Spike results (2026-10-30, Maps JS weekly, headless Chromium, keyless)
 
@@ -79,7 +79,7 @@ Risks and mitigations:
     - `Announcer`: one polite `role="status"` in the layout, debounced 400 ms
   - Verify: e2e (the list updates without navigation, focus stays put, the status text says 「…件」, Back restores the previous list)
   - Files: `src/pages/nagoya/search/results.astro`, `src/client/search-controller.ts`, `src/components/Announcer.astro`
-- [ ] **6. Map widget base**
+- [x] **6. Map widget base**
   - Acceptance:
     - `<nazoru-map>` light-DOM element
     - Lazy Maps load (IntersectionObserver + idle, or first interaction)
@@ -91,7 +91,7 @@ Risks and mitigations:
     - Panning never searches
   - Verify: e2e (no `maps.googleapis.com` request before scrolling, cluster total = heading count, named cluster buttons, bounds search works)
   - Files: `src/widget/{nazoru-map,clusters,styles}.ts`, `src/components/MapWidget.astro`
-- [ ] **7. Crosshair mode**
+- [x] **7. Crosshair mode**
   - Acceptance:
     - 十字で範囲指定 toggle (`aria-pressed`) shows a CSS crosshair and the 頂点を追加/元に戻す/完了/キャンセル buttons plus a pan pad
     - Enter adds `map.getCenter()`; Backspace or Ctrl/Cmd+Z undoes; Esc cancels and refocuses the toggle
@@ -99,7 +99,7 @@ Risks and mitigations:
     - Announcements per vertex; completing emits `area-change`
   - Verify: the keyboard-only e2e script from the spec, a pointer-only (buttons) e2e, and axe in this mode
   - Files: `src/widget/crosshair.ts`, `MapWidget.astro`, `nazoru-map.ts`
-- [ ] **8. Trace mode**
+- [x] **8. Trace mode**
   - Acceptance:
     - なぞる toggle (`aria-pressed`) adds a transparent `touch-action:none` overlay and sets `gestureHandling:'none'` and `clickableIcons:false`
     - Pointer path with minimum-distance sampling, converted on pointerup, then simplify → close → validate
@@ -108,7 +108,7 @@ Risks and mitigations:
     - Gesture settings are restored afterwards
   - Verify: e2e for a drag loop → results, a figure-8 → error with the previous area kept, and Esc mid-stroke → nothing changes
   - Files: `src/widget/trace.ts`, `nazoru-map.ts`
-- [ ] **9. Polish + docs**
+- [x] **9. Polish + docs**
   - Acceptance:
     - 44 px targets
     - forced-colors and reduced-motion styles
@@ -128,6 +128,17 @@ Risks and mitigations:
 - **Map points are fetched by the widget**, not embedded in the partial. Points load only once the map loads, so ward and station pages don't carry about 15 KB of JSON for crawlers. Task 6 adds a `points.json` endpoint backed by the same `searchListings`, so the list and the clusters still agree.
 - **Forms are named 駅を選んで探す / 区を選んで探す / 駅からの距離で探す.** This keeps them distinct from the indexable 「区から探す / 駅から探す」 link navigation.
 - **The e2e server is the built Node server** (`exec node dist/server/entry.mjs`), started fresh every run. An orphaned `astro preview` had been serving a stale build.
+
+## Deviations in tasks 6–9
+
+- **Points endpoint:** `/nagoya/search/points.json` returns the area outline and every in-area point, from the same `searchListings` call as the list.
+- **Clustering uses `supercluster` directly** instead of `@googlemaps/markerclusterer`. That library is unmaintained since July 2025, and its default clickability relies on a deprecated listener path. Markers are keyed across renders, so keyboard focus survives camera changes; this was a real bug found by a flaky test.
+- **Crosshair keyboard test holds the arrow keys down.** Google pans only a few pixels per key press, the way real users hold keys.
+- **Trace mode stays active after an invalid stroke**, so the user can redraw immediately. It does the same after Esc mid-stroke; a second Esc leaves.
+- **No separate map/list toggle at 320 px.** The single-column layout reflows (tested at 320 px), and a "skip the map" link (WCAG 2.4.1) covers bypassing it.
+- **Street View pegman removed:** it is drag-only, which fails WCAG 2.5.7.
+- **The Maps key moved to a runtime env var** (`access: 'secret'`, read at runtime). Astro was inlining the public variable at build time, so a manual build had picked up the `.env` key.
+- **Pressed toggles use a CSS alt-text checkmark** (`content: '✓ ' / ''`), so it no longer leaks into the accessible name.
 
 ## Verification checkpoints
 
