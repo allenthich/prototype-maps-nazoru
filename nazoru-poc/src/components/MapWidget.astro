@@ -1,0 +1,133 @@
+---
+// Server-rendered markup for the <nazoru-map> widget. Without JS it explains itself; with JS the
+// element enhances it. The frame's space is reserved up front so loading the map causes no layout shift.
+import { GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_MAP_ID } from 'astro:env/server';
+// Key is read at runtime; `node dist/server/entry.mjs` sees only the process env (no .env).
+
+interface Props {
+  /** serializeArea() query for the initial area ('' for none). */
+  areaQuery: string;
+  /** 'search': update the page in place; 'navigate': go to the (noindex) search page. */
+  mode: 'search' | 'navigate';
+  /** Where the bypass link jumps to (WCAG 2.4.1): the results heading. */
+  skipTo?: string;
+}
+const { areaQuery, mode, skipTo = '#results-heading' } = Astro.props;
+---
+<nazoru-map
+  data-api-key={GOOGLE_MAPS_API_KEY}
+  data-map-id={GOOGLE_MAPS_MAP_ID}
+  data-area={areaQuery}
+  data-mode={mode}
+  data-state="idle"
+  data-search-url="/nagoya/search/"
+  data-points-url="/nagoya/search/points.json"
+>
+  <a class="skip-map" href={skipTo} data-skip>地図をスキップして物件一覧へ</a>
+  <section class="map-widget" aria-labelledby="map-heading">
+    <h2 id="map-heading">地図で探す</h2>
+    <p id="map-help" class="map-help">地図を動かして「このエリアで検索」を押すと、表示している範囲の物件を探せます。</p>
+    <div class="map-toolbar">
+      <p data-nojs>地図での検索にはJavaScriptが必要です。駅・区・距離の条件からも探せます。</p>
+      <button type="button" data-enhanced hidden data-action="search-bounds">このエリアで検索</button>
+      <button type="button" data-enhanced hidden data-action="trace" aria-pressed="false" aria-controls="trace-controls">なぞる</button>
+      <button type="button" data-enhanced hidden data-action="crosshair" aria-pressed="false" aria-controls="crosshair-controls">十字で範囲指定</button>
+    </div>
+
+    <div id="trace-controls" class="mode-controls" data-trace-controls hidden>
+      <p>
+        地図の上を指（またはマウス）でなぞって範囲を囲んでください。指を離すと検索します。Escキーか「キャンセル」で終了します。キーボードや音声操作では「十字で範囲指定」を使えます。
+      </p>
+      <button type="button" data-action="cancel">キャンセル</button>
+    </div>
+
+    <div id="crosshair-controls" class="mode-controls" data-crosshair-controls hidden>
+      <p id="crosshair-help">
+        地図の中心の十字の位置に頂点を置きます。矢印キーか移動ボタンで地図を動かし、Enterキーか「頂点を追加」で追加してください。3点以上で「完了」できます。Escキーでキャンセルします。
+      </p>
+      <div class="mode-row">
+        <div class="pan-pad" role="group" aria-label="地図を移動">
+          <button type="button" class="up" data-action="pan-up">上へ移動</button>
+          <button type="button" class="left" data-action="pan-left">左へ移動</button>
+          <button type="button" class="right" data-action="pan-right">右へ移動</button>
+          <button type="button" class="down" data-action="pan-down">下へ移動</button>
+        </div>
+        <div class="vertex-actions" role="group" aria-label="頂点の操作">
+          <button type="button" class="button-primary" data-action="add-vertex">頂点を追加</button>
+          <button type="button" data-action="undo-vertex">元に戻す</button>
+          <button type="button" data-action="finish">完了</button>
+          <button type="button" data-action="cancel">キャンセル</button>
+          <p class="vertex-status" data-vertex-status>頂点：0点</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="map-error" role="alert" data-map-error></p>
+
+    <div class="map-frame">
+      <div class="map-canvas" data-map-canvas></div>
+      <div class="crosshair" data-crosshair hidden aria-hidden="true"></div>
+      <div class="trace-overlay" data-trace-overlay hidden>
+        <svg aria-hidden="true" focusable="false"><polyline class="casing" /><polyline class="ink" /></svg>
+      </div>
+    </div>
+    <p class="map-status" data-map-status></p>
+  </section>
+</nazoru-map>
+
+<script>
+  import '../widget/nazoru-map';
+</script>
+
+<style>
+  .skip-map { position: absolute; left: -9999px; }
+  .skip-map:focus { position: static; display: inline-flex; align-items: center; min-height: var(--target); margin-top: 1rem; }
+  .map-help { margin: 0 0 0.5rem; }
+  .map-toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; min-height: calc(var(--target) + 0.5rem); }
+  .map-toolbar p { margin: 0; color: var(--ink-muted); }
+  .map-frame { position: relative; width: 100%; aspect-ratio: 4 / 3; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  @media (min-width: 48rem) { .map-frame { aspect-ratio: 16 / 9; } }
+  .map-canvas { position: absolute; inset: 0; }
+  .mode-controls { margin: 0.5rem 0; padding: 0.75rem 1rem; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--surface); }
+  .mode-controls p { margin: 0 0 0.5rem; }
+  .mode-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+  .pan-pad { display: grid; grid-template-columns: repeat(3, auto); grid-template-areas: '. up .' 'left . right' '. down .'; gap: 0.25rem; }
+  .pan-pad .up { grid-area: up; } .pan-pad .left { grid-area: left; } .pan-pad .right { grid-area: right; } .pan-pad .down { grid-area: down; }
+  .pan-pad button { padding: 0.25rem 0.6rem; font-size: 0.9rem; }
+  .vertex-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+  .vertex-actions .vertex-status { margin: 0; font-weight: 600; }
+  .map-error:empty { display: none; }
+  .map-error { margin: 0.5rem 0; border-left: 6px solid var(--danger); padding: 0.5rem 1rem; color: var(--danger); font-weight: 600; background: #fff5f5; }
+  /* Fixed centre crosshair: dark bars with a white casing so it reads on any tile. */
+  .crosshair { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); pointer-events: none; z-index: 2; }
+  .crosshair::before, .crosshair::after { content: ''; position: absolute; background: #1a1a1a; box-shadow: 0 0 0 2px #ffffff; }
+  .crosshair::before { left: 50%; top: 0; bottom: 0; width: 4px; transform: translateX(-50%); }
+  .crosshair::after { top: 50%; left: 0; right: 0; height: 4px; transform: translateY(-50%); }
+  @media (forced-colors: active) {
+    .crosshair::before, .crosshair::after { background: CanvasText; box-shadow: 0 0 0 2px Canvas; forced-color-adjust: none; }
+  }
+  .trace-overlay { position: absolute; inset: 0; z-index: 3; touch-action: none; cursor: crosshair; outline: 4px dashed #1a1a1a; outline-offset: -4px; }
+  .trace-overlay[hidden] { display: none; }
+  .trace-overlay svg { width: 100%; height: 100%; }
+  .trace-overlay polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .trace-overlay .casing { stroke: #ffffff; stroke-width: 9; }
+  .trace-overlay .ink { stroke: #1a1a1a; stroke-width: 4; }
+  @media (forced-colors: active) {
+    .trace-overlay .casing { stroke: Canvas; }
+    .trace-overlay .ink { stroke: CanvasText; }
+  }
+  .map-status { min-height: 1.7em; margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--ink-muted); }
+</style>
+
+<style is:global>
+  .nz-cluster {
+    display: grid; place-items: center;
+    min-width: 44px; min-height: 44px; padding: 0 0.5rem;
+    border-radius: 999px; background: #ffffff; color: #1a1a1a;
+    font: 700 0.95rem/1 system-ui, sans-serif;
+    border: 3px solid #1a1a1a; box-shadow: 0 0 0 3px #ffffff; /* ring holds 3:1 on any tile */
+  }
+  @media (forced-colors: active) {
+    .nz-cluster { border-color: CanvasText; background: Canvas; color: CanvasText; }
+  }
+</style>

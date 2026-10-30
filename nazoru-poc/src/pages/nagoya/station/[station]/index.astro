@@ -1,0 +1,38 @@
+---
+import Breadcrumbs from '../../../../components/Breadcrumbs.astro';
+import Layout from '../../../../components/Layout.astro';
+import MapWidget from '../../../../components/MapWidget.astro';
+import { serializeArea } from '../../../../core/area/model';
+import ResultList from '../../../../components/ResultList.astro';
+import { searchListings } from '../../../../data/listings.server';
+import { stationById, wardById } from '../../../../data/places';
+import { breadcrumbJsonLd, itemListJsonLd, pagePath, pageSuffix } from '../../../../lib/seo';
+import { PER_PAGE, readPage } from '../../../../lib/search';
+
+const station = stationById(Astro.params.station ?? '');
+if (!station) return Astro.rewrite('/404/');
+const ward = wardById(station.wardId)!;
+
+const path = `/nagoya/station/${station.id}/`;
+const result = searchListings({ kind: 'stations', stationIds: [station.id] }, { page: readPage(Astro.url), perPage: PER_PAGE });
+const crumbs = [
+  { name: '名古屋市', href: '/nagoya/' },
+  { name: ward.name, href: `/nagoya/ward/${ward.id}/` },
+  { name: `${station.name}駅`, href: path },
+];
+---
+<Layout
+  title={`${station.name}駅の賃貸物件${pageSuffix(result.page)}`}
+  description={`${station.name}駅（${station.lines.join('・')}）が最寄りの賃貸物件${result.total.toLocaleString('ja-JP')}件。駅徒歩・賃料・間取りで比較できます。`}
+  canonicalPath={pagePath(path, result.page)}
+  jsonLd={[breadcrumbJsonLd(crumbs, Astro.site!), itemListJsonLd(result.items, Astro.site!, (result.page - 1) * PER_PAGE + 1)]}
+>
+  <Breadcrumbs crumbs={crumbs} />
+  <h1>{station.name}駅の賃貸物件</h1>
+  <p>{station.name}駅（{station.lines.join('・')}）が最寄り駅の物件を、駅徒歩の近い順に表示しています。</p>
+  <p><a href={`/nagoya/search/?area=radius&origin=${station.id}&r=1000`}>{station.name}駅から半径1kmで探す</a></p>
+
+  <MapWidget areaQuery={serializeArea({ kind: 'stations', stationIds: [station.id] })} mode="navigate" />
+
+  <ResultList result={result} pageHref={(n) => pagePath(path, n)} />
+</Layout>

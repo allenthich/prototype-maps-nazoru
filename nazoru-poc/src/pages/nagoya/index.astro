@@ -1,0 +1,47 @@
+---
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import Layout from '../../components/Layout.astro';
+import AreaForm from '../../components/AreaForm.astro';
+import { countBy, getListings } from '../../data/listings.server';
+import { stations, wards } from '../../data/places';
+import { breadcrumbJsonLd } from '../../lib/seo';
+
+const crumbs = [{ name: '名古屋市', href: '/nagoya/' }];
+const total = getListings().length;
+---
+<Layout
+  title="名古屋市の賃貸物件"
+  description={`名古屋市中心部（中区・東区・北区・西区・中村区）の賃貸物件${total.toLocaleString('ja-JP')}件。区・駅・地図から探せます。`}
+  jsonLd={[breadcrumbJsonLd(crumbs, Astro.site!)]}
+>
+  <Breadcrumbs crumbs={crumbs} />
+  <h1>名古屋市の賃貸物件</h1>
+  <p>名古屋市中心部の賃貸物件（全{total.toLocaleString('ja-JP')}件）を、区・駅・地図から探せます。</p>
+
+  <AreaForm area={null} />
+
+  <nav aria-labelledby="wards-heading">
+    <h2 id="wards-heading">区から探す</h2>
+    <ul class="link-grid">
+      {wards.map((w) => <li><a href={`/nagoya/ward/${w.id}/`}>{w.name}（{countBy('wardId', w.id)}件）</a></li>)}
+    </ul>
+  </nav>
+
+  <nav aria-labelledby="stations-heading">
+    <h2 id="stations-heading">駅から探す</h2>
+    {wards.map((w) => (
+      <>
+        <h3>{w.name}</h3>
+        <ul class="link-grid">
+          {stations.filter((s) => s.wardId === w.id).map((s) => (
+            <li><a href={`/nagoya/station/${s.id}/`}>{s.name}駅（{countBy('stationId', s.id)}件）</a></li>
+          ))}
+        </ul>
+      </>
+    ))}
+  </nav>
+</Layout>
+
+<style>
+  nav h3 { margin: 1rem 0 0.5rem; }
+</style>

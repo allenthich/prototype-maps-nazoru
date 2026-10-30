@@ -1,0 +1,16 @@
+# build output
+dist/
+# generated types
+.astro/
+# dependencies
+node_modules/
+# logs
+*.log
+# environment variables (Maps key lives here)
+.env
+.env.production
+# test output
+test-results/
+playwright-report/
+# macOS
+.DS_Store

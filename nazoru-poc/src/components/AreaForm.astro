@@ -1,0 +1,106 @@
+---
+// Plain GET forms: the no-JS, keyboard and screen-reader route to every list-based area search.
+import type { SearchArea } from '../core/area/model';
+import { RADIUS_OPTIONS } from '../core/area/model';
+import { countBy } from '../data/listings.server';
+import { stations, wards } from '../data/places';
+
+interface Props {
+  area: SearchArea | null;
+  /** Which form to open (e.g. the one that produced a validation error). */
+  openKind?: string | null;
+}
+const { area, openKind = null } = Astro.props;
+const selectedStations = new Set(area?.kind === 'stations' ? area.stationIds : []);
+const selectedWards = new Set(area?.kind === 'wards' ? area.wardIds : []);
+const radiusOrigin = area?.kind === 'radius' && stations.some((s) => s.id === area.origin) ? area.origin : 'sakae';
+const radiusM = area?.kind === 'radius' ? area.radiusM : 1000;
+const radiusLabel = (m: number) => (m >= 1000 ? `${m / 1000}km` : `${m}m`);
+---
+<section class="area-forms" aria-labelledby="area-forms-heading">
+  <h2 id="area-forms-heading">条件を選んで探す</h2>
+
+  <form method="get" action="/nagoya/search/" aria-label="駅を選んで探す">
+    <details open={openKind === 'stations'}>
+      <summary>駅を選んで探す</summary>
+      <input type="hidden" name="area" value="stations" />
+      <div class="fieldsets">
+        {wards.map((w) => (
+          <fieldset>
+            <legend>{w.name}</legend>
+            <ul>
+              {stations.filter((s) => s.wardId === w.id).map((s) => (
+                <li>
+                  <label>
+                    <input type="checkbox" name="station" value={s.id} checked={selectedStations.has(s.id)} />
+                    {s.name}駅（{countBy('stationId', s.id)}件）
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </fieldset>
+        ))}
+      </div>
+      <button type="submit">この駅で検索</button>
+    </details>
+  </form>
+
+  <form method="get" action="/nagoya/search/" aria-label="区を選んで探す">
+    <details open={openKind === 'wards'}>
+      <summary>区を選んで探す</summary>
+      <input type="hidden" name="area" value="wards" />
+      <fieldset>
+        <legend>区</legend>
+        <ul>
+          {wards.map((w) => (
+            <li>
+              <label>
+                <input type="checkbox" name="ward" value={w.id} checked={selectedWards.has(w.id)} />
+                {w.name}（{countBy('wardId', w.id)}件）
+              </label>
+            </li>
+          ))}
+        </ul>
+      </fieldset>
+      <button type="submit">この区で検索</button>
+    </details>
+  </form>
+
+  <form method="get" action="/nagoya/search/" aria-label="駅からの距離で探す">
+    <details open={openKind === 'radius'}>
+      <summary>駅からの距離で探す</summary>
+      <input type="hidden" name="area" value="radius" />
+      <p class="field">
+        <label for="radius-origin">中心にする駅</label>
+        <select id="radius-origin" name="origin">
+          {stations.map((s) => <option value={s.id} selected={s.id === radiusOrigin}>{s.name}駅</option>)}
+        </select>
+      </p>
+      <fieldset>
+        <legend>半径</legend>
+        <ul class="inline">
+          {RADIUS_OPTIONS.map((m) => (
+            <li><label><input type="radio" name="r" value={m} checked={m === radiusM} /> {radiusLabel(m)}</label></li>
+          ))}
+        </ul>
+      </fieldset>
+      <button type="submit">この範囲で検索</button>
+    </details>
+  </form>
+</section>
+
+<style>
+  .area-forms form { border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 0.5rem; }
+  summary { min-height: var(--target); display: flex; align-items: center; padding: 0 1rem; font-weight: 600; cursor: pointer; }
+  details > :not(summary) { margin-inline: 1rem; }
+  details > button { margin-block: 0.5rem 1rem; }
+  .fieldsets { display: grid; gap: 0.5rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); }
+  fieldset { border: 1px solid var(--line); border-radius: var(--radius); margin-block: 0.5rem; }
+  legend { font-weight: 600; padding: 0 0.25rem; }
+  fieldset ul { list-style: none; margin: 0; padding: 0; }
+  fieldset ul.inline { display: flex; flex-wrap: wrap; gap: 0 1.5rem; }
+  label { display: inline-flex; align-items: center; gap: 0.5rem; min-height: var(--target); cursor: pointer; }
+  input[type='checkbox'], input[type='radio'] { width: 1.25rem; height: 1.25rem; accent-color: var(--brand); }
+  .field { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+  select { min-height: var(--target); font: inherit; padding: 0 0.5rem; border: 1px solid var(--line); border-radius: var(--radius); }
+</style>

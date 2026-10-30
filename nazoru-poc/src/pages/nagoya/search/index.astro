@@ -1,0 +1,59 @@
+---
+// Custom-area search. Effectively unlimited URL space, so noindex, follow and no canonical.
+import AreaForm from '../../../components/AreaForm.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import Layout from '../../../components/Layout.astro';
+import MapWidget from '../../../components/MapWidget.astro';
+import ResultList from '../../../components/ResultList.astro';
+import { parseArea, serializeArea } from '../../../core/area/model';
+import { summarizeArea } from '../../../core/area/summary';
+import { searchListings } from '../../../data/listings.server';
+import { gazetteer } from '../../../data/places';
+import { PER_PAGE, readPage } from '../../../lib/search';
+
+const parsed = parseArea(Astro.url.searchParams, gazetteer);
+const area = parsed.ok ? parsed.area : null;
+const error = parsed.ok ? null : parsed.error;
+if (error) Astro.response.status = 400;
+
+const summary = area ? summarizeArea(area, gazetteer) : null;
+const result = area ? searchListings(area, { page: readPage(Astro.url), perPage: PER_PAGE }) : null;
+const areaQuery = area ? serializeArea(area) : '';
+const pageHref = (n: number) => `/nagoya/search/?${areaQuery}${n > 1 ? `&page=${n}` : ''}`;
+const crumbs = [
+  { name: '名古屋市', href: '/nagoya/' },
+  { name: '条件・地図から探す', href: '/nagoya/search/' },
+];
+---
+<Layout
+  title={summary && result ? `${summary}の賃貸物件（${result.total.toLocaleString('ja-JP')}件）` : '条件・地図から探す'}
+  description="名古屋市の賃貸物件を、駅・区・距離・地図で囲んだ範囲から探せます。"
+  canonicalPath={null}
+  robots="noindex, follow"
+>
+  <Breadcrumbs crumbs={crumbs} />
+  <h1>名古屋市の賃貸物件を条件・地図から探す</h1>
+  <div id="search-error" class="form-error" role="alert">{error}</div>
+
+  <MapWidget areaQuery={areaQuery} mode="search" />
+
+  <AreaForm area={area} openKind={error ? Astro.url.searchParams.get('area') : null} />
+
+  <div id="results-slot">
+    {result && summary ? (
+      <ResultList result={result} pageHref={pageHref} summary={summary} />
+    ) : (
+      !error && <p>駅・区・距離を選ぶか、地図で範囲を指定してください。</p>
+    )}
+  </div>
+</Layout>
+
+<script>
+  import { initSearchController } from '../../../client/search-controller';
+  initSearchController();
+</script>
+
+<style>
+  .form-error:empty { display: none; }
+  .form-error { border-left: 6px solid var(--danger); padding: 0.5rem 1rem; color: var(--danger); font-weight: 600; background: #fff5f5; }
+</style>
