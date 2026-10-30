@@ -27,7 +27,15 @@ const { areaQuery, mode } = Astro.props;
     <div class="map-toolbar">
       <p data-nojs>地図での検索にはJavaScriptが必要です。駅・区・距離の条件からも探せます。</p>
       <button type="button" data-enhanced hidden data-action="search-bounds">このエリアで検索</button>
+      <button type="button" data-enhanced hidden data-action="trace" aria-pressed="false" aria-controls="trace-controls">なぞる</button>
       <button type="button" data-enhanced hidden data-action="crosshair" aria-pressed="false" aria-controls="crosshair-controls">十字で範囲指定</button>
+    </div>
+
+    <div id="trace-controls" class="mode-controls" data-trace-controls hidden>
+      <p>
+        地図の上を指（またはマウス）でなぞって範囲を囲んでください。指を離すと検索します。Escキーか「キャンセル」で終了します。キーボードや音声操作では「十字で範囲指定」を使えます。
+      </p>
+      <button type="button" data-action="cancel">キャンセル</button>
     </div>
 
     <div id="crosshair-controls" class="mode-controls" data-crosshair-controls hidden>
@@ -56,6 +64,9 @@ const { areaQuery, mode } = Astro.props;
     <div class="map-frame">
       <div class="map-canvas" data-map-canvas></div>
       <div class="crosshair" data-crosshair hidden aria-hidden="true"></div>
+      <div class="trace-overlay" data-trace-overlay hidden>
+        <svg aria-hidden="true" focusable="false"><polyline class="casing" /><polyline class="ink" /></svg>
+      </div>
     </div>
     <p class="map-status" data-map-status></p>
   </section>
@@ -89,6 +100,16 @@ const { areaQuery, mode } = Astro.props;
   .crosshair::after { top: 50%; left: 0; right: 0; height: 4px; transform: translateY(-50%); }
   @media (forced-colors: active) {
     .crosshair::before, .crosshair::after { background: CanvasText; box-shadow: 0 0 0 2px Canvas; forced-color-adjust: none; }
+  }
+  .trace-overlay { position: absolute; inset: 0; z-index: 3; touch-action: none; cursor: crosshair; outline: 4px dashed #1a1a1a; outline-offset: -4px; }
+  .trace-overlay[hidden] { display: none; }
+  .trace-overlay svg { width: 100%; height: 100%; }
+  .trace-overlay polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .trace-overlay .casing { stroke: #ffffff; stroke-width: 9; }
+  .trace-overlay .ink { stroke: #1a1a1a; stroke-width: 4; }
+  @media (forced-colors: active) {
+    .trace-overlay .casing { stroke: Canvas; }
+    .trace-overlay .ink { stroke: CanvasText; }
   }
   .map-status { min-height: 1.7em; margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--ink-muted); }
 </style>

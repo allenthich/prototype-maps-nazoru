@@ -4,6 +4,7 @@ import Supercluster, { type ClusterFeature, type ClusterProperties, type PointFe
 import { serializeArea } from '../core/area/model';
 import { announce } from './announce';
 import { createCrosshair } from './crosshair';
+import { createTrace } from './trace';
 import type { Mode, ModeContext } from './modes';
 import { drawArea, type Handle } from './overlay';
 
@@ -164,6 +165,17 @@ export async function createEngine(host: MapHost): Promise<MapEngine> {
     if (el) el.textContent = text;
   }
 
+  // A no-op overlay gives access to the projection for pixel → lat/lng conversion.
+  class Projector extends google.maps.OverlayView {
+    onAdd() {}
+    draw() {}
+    onRemove() {}
+  }
+  const projector = new Projector();
+  projector.setMap(map);
+  const originalGestures = (map.get('gestureHandling') as string | undefined) ?? 'auto';
+  host.dataset.gestureHandling = originalGestures;
+
   const modes: Mode[] = [];
   const ctx: ModeContext = {
     host,
@@ -173,9 +185,15 @@ export async function createEngine(host: MapHost): Promise<MapEngine> {
     setMarkersVisible,
     requestArea: (query) => requestArea(query),
     focusMap: () => focusMap(),
+    toLatLng: (x, y) => projector.getProjection().fromContainerPixelToLatLng(new google.maps.Point(x, y))!.toJSON(),
+    setGestures: (mode) => {
+      const gestureHandling = mode ?? originalGestures;
+      map.setOptions({ gestureHandling });
+      host.dataset.gestureHandling = gestureHandling;
+    },
     stopOtherModes: (except) => modes.filter((m) => m !== except && m.active).forEach((m) => m.cancel({ silent: true })),
   };
-  modes.push(createCrosshair(ctx));
+  modes.push(createCrosshair(ctx), createTrace(ctx));
   host.addEventListener('keydown', (event) => modes.forEach((m) => m.onKeydown(event)));
 
   function action(name: string) {
