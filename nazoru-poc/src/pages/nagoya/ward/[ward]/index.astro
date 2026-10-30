@@ -1,6 +1,8 @@
 ---
 import Breadcrumbs from '../../../../components/Breadcrumbs.astro';
 import Layout from '../../../../components/Layout.astro';
+import MapWidget from '../../../../components/MapWidget.astro';
+import { serializeArea } from '../../../../core/area/model';
 import ResultList from '../../../../components/ResultList.astro';
 import { searchListings } from '../../../../data/listings.server';
 import { stations, wardById } from '../../../../data/places';
@@ -34,6 +36,8 @@ const wardStations = stations.filter((s) => s.wardId === ward.id);
       {wardStations.map((s) => <li><a href={`/nagoya/station/${s.id}/`}>{s.name}駅</a></li>)}
     </ul>
   </nav>
+
+  <MapWidget areaQuery={serializeArea({ kind: 'wards', wardIds: [ward.id] })} mode="navigate" />
 
   <ResultList result={result} pageHref={(n) => pagePath(path, n)} />
 </Layout>

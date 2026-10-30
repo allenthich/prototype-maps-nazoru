@@ -1,6 +1,8 @@
 ---
 import Breadcrumbs from '../../../../components/Breadcrumbs.astro';
 import Layout from '../../../../components/Layout.astro';
+import MapWidget from '../../../../components/MapWidget.astro';
+import { serializeArea } from '../../../../core/area/model';
 import ResultList from '../../../../components/ResultList.astro';
 import { searchListings } from '../../../../data/listings.server';
 import { stationById, wardById } from '../../../../data/places';
@@ -29,6 +31,8 @@ const crumbs = [
   <h1>{station.name}駅の賃貸物件</h1>
   <p>{station.name}駅（{station.lines.join('・')}）が最寄り駅の物件を、駅徒歩の近い順に表示しています。</p>
   <p><a href={`/nagoya/search/?area=radius&origin=${station.id}&r=1000`}>{station.name}駅から半径1kmで探す</a></p>
+
+  <MapWidget areaQuery={serializeArea({ kind: 'stations', stationIds: [station.id] })} mode="navigate" />
 
   <ResultList result={result} pageHref={(n) => pagePath(path, n)} />
 </Layout>

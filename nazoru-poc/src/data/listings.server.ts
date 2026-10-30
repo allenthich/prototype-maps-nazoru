@@ -24,6 +24,7 @@ export interface Listing {
 
 export interface ListingPoint {
   id: string;
+  name: string;
   lat: number;
   lng: number;
 }
@@ -136,7 +137,7 @@ export function searchListings(area: SearchArea, opts: { page: number; perPage: 
     pageCount,
     perPage: opts.perPage,
     items: matches.slice((page - 1) * opts.perPage, page * opts.perPage),
-    points: matches.map(({ id, lat, lng }) => ({ id, lat, lng })),
+    points: matches.map(({ id, name, lat, lng }) => ({ id, name, lat, lng })),
   };
 }
 

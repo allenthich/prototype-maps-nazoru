@@ -18,7 +18,9 @@ export default defineConfig({
   env: {
     schema: {
       // Empty key = Google's keyless development mode (watermarked tiles).
-      GOOGLE_MAPS_API_KEY: envField.string({ context: 'server', access: 'public', optional: true, default: '' }),
+      // access 'secret' only so the key is read at runtime instead of being inlined at build time;
+      // a Maps JS key is public by nature (it ends up in HTML) and must be HTTP-referrer restricted.
+      GOOGLE_MAPS_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true, default: '' }),
       GOOGLE_MAPS_MAP_ID: envField.string({ context: 'server', access: 'public', optional: true, default: 'DEMO_MAP_ID' }),
     },
   },

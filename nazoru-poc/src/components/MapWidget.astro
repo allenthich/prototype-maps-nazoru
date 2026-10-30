@@ -1,0 +1,63 @@
+---
+// Server-rendered markup for the <nazoru-map> widget. Without JS it explains itself; with JS the
+// element enhances it. The frame's space is reserved up front so loading the map causes no layout shift.
+import { GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_MAP_ID } from 'astro:env/server';
+// Key is read at runtime; `node dist/server/entry.mjs` sees only the process env (no .env).
+
+interface Props {
+  /** serializeArea() query for the initial area ('' for none). */
+  areaQuery: string;
+  /** 'search': update the page in place; 'navigate': go to the (noindex) search page. */
+  mode: 'search' | 'navigate';
+}
+const { areaQuery, mode } = Astro.props;
+---
+<nazoru-map
+  data-api-key={GOOGLE_MAPS_API_KEY}
+  data-map-id={GOOGLE_MAPS_MAP_ID}
+  data-area={areaQuery}
+  data-mode={mode}
+  data-state="idle"
+  data-search-url="/nagoya/search/"
+  data-points-url="/nagoya/search/points.json"
+>
+  <section class="map-widget" aria-labelledby="map-heading">
+    <h2 id="map-heading">地図で探す</h2>
+    <p id="map-help" class="map-help">地図を動かして「このエリアで検索」を押すと、表示している範囲の物件を探せます。</p>
+    <div class="map-toolbar">
+      <p data-nojs>地図での検索にはJavaScriptが必要です。駅・区・距離の条件からも探せます。</p>
+      <button type="button" data-enhanced hidden data-action="search-bounds">このエリアで検索</button>
+    </div>
+    <div class="map-frame">
+      <div class="map-canvas" data-map-canvas></div>
+    </div>
+    <p class="map-status" data-map-status></p>
+  </section>
+</nazoru-map>
+
+<script>
+  import '../widget/nazoru-map';
+</script>
+
+<style>
+  .map-help { margin: 0 0 0.5rem; }
+  .map-toolbar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; min-height: calc(var(--target) + 0.5rem); }
+  .map-toolbar p { margin: 0; color: var(--ink-muted); }
+  .map-frame { position: relative; width: 100%; aspect-ratio: 4 / 3; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  @media (min-width: 48rem) { .map-frame { aspect-ratio: 16 / 9; } }
+  .map-canvas { position: absolute; inset: 0; }
+  .map-status { min-height: 1.7em; margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--ink-muted); }
+</style>
+
+<style is:global>
+  .nz-cluster {
+    display: grid; place-items: center;
+    min-width: 44px; min-height: 44px; padding: 0 0.5rem;
+    border-radius: 999px; background: #ffffff; color: #1a1a1a;
+    font: 700 0.95rem/1 system-ui, sans-serif;
+    border: 3px solid #1a1a1a; box-shadow: 0 0 0 3px #ffffff; /* ring holds 3:1 on any tile */
+  }
+  @media (forced-colors: active) {
+    .nz-cluster { border-color: CanvasText; background: Canvas; color: CanvasText; }
+  }
+</style>

@@ -3,6 +3,7 @@
 import AreaForm from '../../../components/AreaForm.astro';
 import Breadcrumbs from '../../../components/Breadcrumbs.astro';
 import Layout from '../../../components/Layout.astro';
+import MapWidget from '../../../components/MapWidget.astro';
 import ResultList from '../../../components/ResultList.astro';
 import { parseArea, serializeArea } from '../../../core/area/model';
 import { summarizeArea } from '../../../core/area/summary';
@@ -33,6 +34,8 @@ const crumbs = [
   <Breadcrumbs crumbs={crumbs} />
   <h1>名古屋市の賃貸物件を条件・地図から探す</h1>
   <div id="search-error" class="form-error" role="alert">{error}</div>
+
+  <MapWidget areaQuery={areaQuery} mode="search" />
 
   <AreaForm area={area} openKind={error ? Astro.url.searchParams.get('area') : null} />
 
