@@ -1,0 +1,43 @@
+---
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import Layout from '../../../components/Layout.astro';
+import { getListing } from '../../../data/listings.server';
+import { stationById, wardById } from '../../../data/places';
+import { breadcrumbJsonLd, listingJsonLd } from '../../../lib/seo';
+
+const listing = getListing(Astro.params.id ?? '');
+if (!listing) return Astro.rewrite('/404/');
+const station = stationById(listing.stationId)!;
+const ward = wardById(listing.wardId)!;
+const path = `/listings/${listing.id}/`;
+const crumbs = [
+  { name: '名古屋市', href: '/nagoya/' },
+  { name: ward.name, href: `/nagoya/ward/${ward.id}/` },
+  { name: `${station.name}駅`, href: `/nagoya/station/${station.id}/` },
+  { name: listing.name, href: path },
+];
+const rent = `${(listing.rent / 10000).toFixed(1)}万円`;
+---
+<Layout
+  title={`${listing.name}（${station.name}駅 徒歩${listing.walkMin}分・${listing.layout}・${rent}）`}
+  description={`${listing.name}は${station.name}駅徒歩${listing.walkMin}分、名古屋市${ward.name}の${listing.layout}（${listing.areaM2}m²）の賃貸物件です。賃料${rent}。`}
+  jsonLd={[breadcrumbJsonLd(crumbs, Astro.site!), listingJsonLd(listing, Astro.site!, ward.name)]}
+>
+  <Breadcrumbs crumbs={crumbs} />
+  <h1>{listing.name}</h1>
+  <dl class="facts">
+    <div><dt>賃料</dt><dd>{rent}（管理費 {listing.fee.toLocaleString('ja-JP')}円）</dd></div>
+    <div><dt>間取り・面積</dt><dd>{listing.layout}・{listing.areaM2}m²</dd></div>
+    <div><dt>交通</dt><dd><a href={`/nagoya/station/${station.id}/`}>{station.name}駅</a>（{station.lines.join('・')}）徒歩{listing.walkMin}分</dd></div>
+    <div><dt>所在地</dt><dd>{listing.address}</dd></div>
+    <div><dt>築年・階</dt><dd>{listing.builtYear}年築・{listing.floor}階</dd></div>
+  </dl>
+  <p><a href={`/nagoya/search/?area=radius&origin=${station.id}&r=500`}>{station.name}駅から半径500mの物件を探す</a></p>
+</Layout>
+
+<style>
+  .facts { display: grid; gap: 0.5rem; margin: 0; }
+  .facts div { display: grid; grid-template-columns: 8em 1fr; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid var(--line); }
+  .facts dt { font-weight: 600; }
+  .facts dd { margin: 0; }
+</style>

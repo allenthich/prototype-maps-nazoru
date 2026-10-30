@@ -1,0 +1,8 @@
+---
+import Layout from '../components/Layout.astro';
+Astro.response.status = 404;
+---
+<Layout title="ページが見つかりません" description="お探しのページは見つかりませんでした。" canonicalPath={null} robots="noindex, follow">
+  <h1>ページが見つかりません</h1>
+  <p>URLが間違っているか、掲載が終了した可能性があります。<a href="/nagoya/">名古屋市の賃貸物件トップ</a>から探してください。</p>
+</Layout>

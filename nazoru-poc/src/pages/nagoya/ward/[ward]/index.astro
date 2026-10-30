@@ -1,0 +1,39 @@
+---
+import Breadcrumbs from '../../../../components/Breadcrumbs.astro';
+import Layout from '../../../../components/Layout.astro';
+import ResultList from '../../../../components/ResultList.astro';
+import { searchListings } from '../../../../data/listings.server';
+import { stations, wardById } from '../../../../data/places';
+import { breadcrumbJsonLd, itemListJsonLd, pagePath, pageSuffix } from '../../../../lib/seo';
+import { PER_PAGE, readPage } from '../../../../lib/search';
+
+const ward = wardById(Astro.params.ward ?? '');
+if (!ward) return Astro.rewrite('/404/');
+
+const path = `/nagoya/ward/${ward.id}/`;
+const result = searchListings({ kind: 'wards', wardIds: [ward.id] }, { page: readPage(Astro.url), perPage: PER_PAGE });
+const crumbs = [
+  { name: '名古屋市', href: '/nagoya/' },
+  { name: ward.name, href: path },
+];
+const wardStations = stations.filter((s) => s.wardId === ward.id);
+---
+<Layout
+  title={`名古屋市${ward.name}の賃貸物件${pageSuffix(result.page)}`}
+  description={`名古屋市${ward.name}の賃貸マンション・アパート${result.total.toLocaleString('ja-JP')}件。駅徒歩・賃料・間取りで比較できます。`}
+  canonicalPath={pagePath(path, result.page)}
+  jsonLd={[breadcrumbJsonLd(crumbs, Astro.site!), itemListJsonLd(result.items, Astro.site!, (result.page - 1) * PER_PAGE + 1)]}
+>
+  <Breadcrumbs crumbs={crumbs} />
+  <h1>名古屋市{ward.name}の賃貸物件</h1>
+  <p>{ward.name}の賃貸物件を駅徒歩の近い順に表示しています。</p>
+
+  <nav aria-labelledby="ward-stations-heading">
+    <h2 id="ward-stations-heading">{ward.name}の駅から探す</h2>
+    <ul class="link-grid">
+      {wardStations.map((s) => <li><a href={`/nagoya/station/${s.id}/`}>{s.name}駅</a></li>)}
+    </ul>
+  </nav>
+
+  <ResultList result={result} pageHref={(n) => pagePath(path, n)} />
+</Layout>

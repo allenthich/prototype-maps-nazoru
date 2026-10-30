@@ -1,0 +1,82 @@
+---
+// The results region. Rendered in full pages and, unchanged, in the search partial,
+// so crawlers, no-JS users and enhanced users all get the same HTML.
+import type { SearchResult } from '../data/listings.server';
+import { stationById } from '../data/places';
+import { SITE_NAME } from '../lib/seo';
+
+interface Props {
+  result: SearchResult;
+  pageHref: (page: number) => string;
+  /** Text summary of the active area (search pages only). */
+  summary?: string;
+}
+
+const { result, pageHref, summary } = Astro.props;
+const { total, page, pageCount, perPage, items } = result;
+const first = (page - 1) * perPage + 1;
+const last = first + items.length - 1;
+const title = summary ? `${summary}の賃貸物件（${total.toLocaleString('ja-JP')}件） | ${SITE_NAME}` : undefined;
+const yen = (n: number) => `${(n / 10000).toFixed(1)}万円`;
+const pages = [...new Set([1, page - 2, page - 1, page, page + 1, page + 2, pageCount])]
+  .filter((n) => n >= 1 && n <= pageCount)
+  .sort((a, b) => a - b);
+---
+<section id="results" class="results" aria-labelledby="results-heading" data-total={total} data-summary={summary} data-title={title}>
+  <h2 id="results-heading" tabindex="-1">物件一覧（{total.toLocaleString('ja-JP')}件）</h2>
+  {summary && (
+    <p class="results-summary">
+      <span>検索範囲：{summary}</span>
+      <a href="/nagoya/search/">条件をクリア</a>
+    </p>
+  )}
+  {total === 0 ? (
+    <p>この範囲に該当する物件はありません。範囲を広げるか、駅・区から探してください。</p>
+  ) : (
+    <>
+      <p class="results-range">{first.toLocaleString('ja-JP')}〜{last.toLocaleString('ja-JP')}件目を表示（駅徒歩の近い順）</p>
+      <ol class="listings">
+        {items.map((l) => (
+          <li>
+            <article class="listing" aria-labelledby={`l-${l.id}`}>
+              <h3 id={`l-${l.id}`}><a href={`/listings/${l.id}/`}>{l.name}</a></h3>
+              <dl>
+                <div><dt>賃料</dt><dd><strong>{yen(l.rent)}</strong>（管理費 {l.fee.toLocaleString('ja-JP')}円）</dd></div>
+                <div><dt>間取り</dt><dd>{l.layout}・{l.areaM2}m²</dd></div>
+                <div><dt>交通</dt><dd data-testid="listing-station">{stationById(l.stationId)?.name}駅 徒歩{l.walkMin}分</dd></div>
+                <div><dt>築年</dt><dd>{l.builtYear}年築・{l.floor}階</dd></div>
+              </dl>
+            </article>
+          </li>
+        ))}
+      </ol>
+      {pageCount > 1 && (
+        <nav aria-label="ページ送り" class="pagination">
+          <ul>
+            {page > 1 && <li><a href={pageHref(page - 1)} rel="prev">前のページ</a></li>}
+            {pages.map((n) => (
+              <li>
+                <a href={pageHref(n)} aria-current={n === page ? 'page' : undefined} aria-label={`${n}ページ目`}>{n}</a>
+              </li>
+            ))}
+            {page < pageCount && <li><a href={pageHref(page + 1)} rel="next">次のページ</a></li>}
+          </ul>
+        </nav>
+      )}
+    </>
+  )}
+</section>
+
+<style>
+  .results-summary { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; font-weight: 600; }
+  .results-summary a { font-weight: 400; }
+  .listings { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr)); }
+  .listing { border: 1px solid var(--line); border-radius: var(--radius); padding: 0.75rem 1rem; height: 100%; }
+  .listing dl { display: grid; gap: 0.1rem; margin: 0.5rem 0 0; }
+  .listing dl div { display: flex; gap: 0.5rem; }
+  .listing dt { min-width: 3.5em; color: var(--ink-muted); }
+  .listing dd { margin: 0; }
+  .pagination ul { display: flex; flex-wrap: wrap; gap: 0.5rem; list-style: none; padding: 0; margin: 1.5rem 0; }
+  .pagination a { display: inline-flex; align-items: center; justify-content: center; min-width: var(--target); min-height: var(--target); padding: 0 0.75rem; border: 1px solid var(--line); border-radius: var(--radius); }
+  .pagination a[aria-current='page'] { background: var(--ink); color: var(--paper); border-color: var(--ink); text-decoration: none; }
+</style>

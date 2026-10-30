@@ -1,0 +1,23 @@
+---
+// HTML fragment of the results region for in-place updates. Same component as the full page.
+import ResultList from '../../../../components/ResultList.astro';
+import { parseArea, serializeArea } from '../../../../core/area/model';
+import { summarizeArea } from '../../../../core/area/summary';
+import { searchListings } from '../../../../data/listings.server';
+import { gazetteer } from '../../../../data/places';
+import { PER_PAGE, readPage } from '../../../../lib/search';
+
+export const partial = true;
+
+Astro.response.headers.set('X-Robots-Tag', 'noindex');
+const parsed = parseArea(Astro.url.searchParams, gazetteer);
+const area = parsed.ok ? parsed.area : null;
+const error = parsed.ok ? (area ? null : '検索範囲を指定してください。') : parsed.error;
+if (error) Astro.response.status = 400;
+
+const result = area ? searchListings(area, { page: readPage(Astro.url), perPage: PER_PAGE }) : null;
+const areaQuery = area ? serializeArea(area) : '';
+const pageHref = (n: number) => `/nagoya/search/?${areaQuery}${n > 1 ? `&page=${n}` : ''}`;
+---
+{error && <p data-search-error>{error}</p>}
+{area && result && <ResultList result={result} pageHref={pageHref} summary={summarizeArea(area, gazetteer)} />}

@@ -1,0 +1,51 @@
+---
+import '../styles/global.css';
+import { jsonForScript, SITE_NAME } from '../lib/seo';
+import Announcer from './Announcer.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Path for rel=canonical; null for pages that must not declare one. */
+  canonicalPath?: string | null;
+  robots?: 'index, follow' | 'noindex, follow';
+  jsonLd?: object[];
+}
+
+const { title, description, canonicalPath, robots = 'index, follow', jsonLd = [] } = Astro.props;
+const fullTitle = `${title} | ${SITE_NAME}`;
+const canonical = canonicalPath === null ? null : new URL(canonicalPath ?? Astro.url.pathname, Astro.site).href;
+---
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {jsonLd.map((o) => <script is:inline type="application/ld+json" set:html={jsonForScript(o)} />)}
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">本文へスキップ</a>
+    <header class="site-header">
+      <a href="/nagoya/">{SITE_NAME}</a>
+    </header>
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <p>このサイトは検証用のプロトタイプです。掲載物件はすべて架空のデータで、位置は概略です。</p>
+    </footer>
+    <Announcer />
+  </body>
+</html>
