@@ -3,6 +3,8 @@ import { importLibrary, setOptions } from '@googlemaps/js-api-loader';
 import Supercluster, { type ClusterFeature, type ClusterProperties, type PointFeature } from 'supercluster';
 import { serializeArea } from '../core/area/model';
 import { announce } from './announce';
+import { createCrosshair } from './crosshair';
+import type { Mode, ModeContext } from './modes';
 import { drawArea, type Handle } from './overlay';
 
 type PointTuple = [id: string, lat: number, lng: number, name: string];
@@ -65,6 +67,7 @@ export async function createEngine(host: MapHost): Promise<MapEngine> {
   let generation = 0; // bumps when the point set changes, so stale cluster ids never match
   let area: Handle | undefined;
   let inView = { places: 0, listings: 0 };
+  let markersVisible = true;
 
   const region = () => canvas.querySelector<HTMLElement>('[role="region"][tabindex]');
 
@@ -95,6 +98,7 @@ export async function createEngine(host: MapHost): Promise<MapEngine> {
     if (!bounds) return;
     const zoom = Math.round(map.getZoom() ?? 14);
     host.dataset.zoom = String(zoom);
+    if (!markersVisible) return;
     const sw = bounds.getSouthWest();
     const ne = bounds.getNorthEast();
     const next = new Map<string, google.maps.marker.AdvancedMarkerElement>();
@@ -148,8 +152,36 @@ export async function createEngine(host: MapHost): Promise<MapEngine> {
     else host.dispatchEvent(new CustomEvent('area-change', { bubbles: true, detail: { query } }));
   }
 
+  function setMarkersVisible(visible: boolean) {
+    markersVisible = visible;
+    if (visible) return render();
+    for (const marker of markers.values()) marker.map = null;
+    markers = new Map();
+  }
+
+  function showError(text: string) {
+    const el = host.querySelector('[data-map-error]');
+    if (el) el.textContent = text;
+  }
+
+  const modes: Mode[] = [];
+  const ctx: ModeContext = {
+    host,
+    map,
+    announce: (text) => announce(host, text),
+    showError,
+    setMarkersVisible,
+    requestArea: (query) => requestArea(query),
+    focusMap: () => focusMap(),
+    stopOtherModes: (except) => modes.filter((m) => m !== except && m.active).forEach((m) => m.cancel({ silent: true })),
+  };
+  modes.push(createCrosshair(ctx));
+  host.addEventListener('keydown', (event) => modes.forEach((m) => m.onKeydown(event)));
+
   function action(name: string) {
+    if (modes.some((m) => m.action(name))) return;
     if (name === 'search-bounds') {
+      modes.forEach((m) => m.cancel({ silent: true }));
       const b = map.getBounds();
       if (!b) return;
       const sw = b.getSouthWest();

@@ -27,9 +27,35 @@ const { areaQuery, mode } = Astro.props;
     <div class="map-toolbar">
       <p data-nojs>地図での検索にはJavaScriptが必要です。駅・区・距離の条件からも探せます。</p>
       <button type="button" data-enhanced hidden data-action="search-bounds">このエリアで検索</button>
+      <button type="button" data-enhanced hidden data-action="crosshair" aria-pressed="false" aria-controls="crosshair-controls">十字で範囲指定</button>
     </div>
+
+    <div id="crosshair-controls" class="mode-controls" data-crosshair-controls hidden>
+      <p id="crosshair-help">
+        地図の中心の十字の位置に頂点を置きます。矢印キーか移動ボタンで地図を動かし、Enterキーか「頂点を追加」で追加してください。3点以上で「完了」できます。Escキーでキャンセルします。
+      </p>
+      <div class="mode-row">
+        <div class="pan-pad" role="group" aria-label="地図を移動">
+          <button type="button" class="up" data-action="pan-up">上へ移動</button>
+          <button type="button" class="left" data-action="pan-left">左へ移動</button>
+          <button type="button" class="right" data-action="pan-right">右へ移動</button>
+          <button type="button" class="down" data-action="pan-down">下へ移動</button>
+        </div>
+        <div class="vertex-actions" role="group" aria-label="頂点の操作">
+          <button type="button" class="button-primary" data-action="add-vertex">頂点を追加</button>
+          <button type="button" data-action="undo-vertex">元に戻す</button>
+          <button type="button" data-action="finish">完了</button>
+          <button type="button" data-action="cancel">キャンセル</button>
+          <p class="vertex-status" data-vertex-status>頂点：0点</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="map-error" role="alert" data-map-error></p>
+
     <div class="map-frame">
       <div class="map-canvas" data-map-canvas></div>
+      <div class="crosshair" data-crosshair hidden aria-hidden="true"></div>
     </div>
     <p class="map-status" data-map-status></p>
   </section>
@@ -46,6 +72,24 @@ const { areaQuery, mode } = Astro.props;
   .map-frame { position: relative; width: 100%; aspect-ratio: 4 / 3; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
   @media (min-width: 48rem) { .map-frame { aspect-ratio: 16 / 9; } }
   .map-canvas { position: absolute; inset: 0; }
+  .mode-controls { margin: 0.5rem 0; padding: 0.75rem 1rem; border: 2px solid var(--ink); border-radius: var(--radius); background: var(--surface); }
+  .mode-controls p { margin: 0 0 0.5rem; }
+  .mode-row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+  .pan-pad { display: grid; grid-template-columns: repeat(3, auto); grid-template-areas: '. up .' 'left . right' '. down .'; gap: 0.25rem; }
+  .pan-pad .up { grid-area: up; } .pan-pad .left { grid-area: left; } .pan-pad .right { grid-area: right; } .pan-pad .down { grid-area: down; }
+  .pan-pad button { padding: 0.25rem 0.6rem; font-size: 0.9rem; }
+  .vertex-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+  .vertex-actions .vertex-status { margin: 0; font-weight: 600; }
+  .map-error:empty { display: none; }
+  .map-error { margin: 0.5rem 0; border-left: 6px solid var(--danger); padding: 0.5rem 1rem; color: var(--danger); font-weight: 600; background: #fff5f5; }
+  /* Fixed centre crosshair: dark bars with a white casing so it reads on any tile. */
+  .crosshair { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); pointer-events: none; z-index: 2; }
+  .crosshair::before, .crosshair::after { content: ''; position: absolute; background: #1a1a1a; box-shadow: 0 0 0 2px #ffffff; }
+  .crosshair::before { left: 50%; top: 0; bottom: 0; width: 4px; transform: translateX(-50%); }
+  .crosshair::after { top: 50%; left: 0; right: 0; height: 4px; transform: translateY(-50%); }
+  @media (forced-colors: active) {
+    .crosshair::before, .crosshair::after { background: CanvasText; box-shadow: 0 0 0 2px Canvas; forced-color-adjust: none; }
+  }
   .map-status { min-height: 1.7em; margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--ink-muted); }
 </style>
 
