@@ -51,7 +51,7 @@ User stories:
 | Map widget | Vanilla TypeScript custom element, **light DOM** (so ARIA id references work) | — |
 | Map | Google Maps JS via `@googlemaps/js-api-loader`; `AdvancedMarkerElement` | 2.1.3 |
 | Clustering | `supercluster`, on the client, over every in-area point the server returns | 9.1.0 |
-| Geometry | `@turf/boolean-point-in-polygon`, `@turf/simplify`, `@turf/kinks`, `@turf/circle` | 7.4.0 |
+| Geometry | `@turf/boolean-point-in-polygon`, `@turf/kinks`, `@turf/area`, `@turf/helpers`, `@turf/circle` (stroke simplification is our own, in screen pixels) | 7.4.0 |
 | Checks | `astro check` (types); Astro dev toolbar audit (accessibility and performance) | `@astrojs/check` 0.9.12 |
 | Tests | Vitest (unit), Playwright + `@axe-core/playwright` (e2e, accessibility, SEO tags) | 5.0.5 / 1.64.1 / 4.14.0 |
 | Tooling | pnpm 10.25, Node 26 (Astro 7 needs ≥ 22.23.4) | — |

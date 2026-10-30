@@ -22,7 +22,6 @@
     "@turf/circle": "^7.4.0",
     "@turf/helpers": "^7.4.0",
     "@turf/kinks": "^7.4.0",
-    "@turf/simplify": "^7.4.0",
     "astro": "^7.4.4",
     "supercluster": "^9.1.0"
   },
