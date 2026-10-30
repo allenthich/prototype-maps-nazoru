@@ -20,6 +20,8 @@ pnpm test:unit              # Vitest: area model, geometry, data
 pnpm test:e2e               # Playwright + axe against a fresh build (keyless Maps; needs network)
 ```
 
+No local setup? [Open it in CodeSandbox](https://codesandbox.io/p/devbox/github/allenthich/prototype-maps-nazoru); the root README has the details.
+
 **Maps API key.**
 - Put it in `.env` as `GOOGLE_MAPS_API_KEY`, alongside `GOOGLE_MAPS_MAP_ID`, which defaults to `DEMO_MAP_ID`. `.env` is gitignored.
 - Without a key the map runs in Google's **keyless development mode**: tiles are darkened and watermarked, and Google shows a dismissible dialog.

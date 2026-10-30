@@ -1,0 +1,4 @@
+{
+  "name": "prototype-maps-nazoru (Node 24 LTS)",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24"
+}

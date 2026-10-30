@@ -1,0 +1,23 @@
+{
+  "$schema": "https://codesandbox.io/schemas/tasks.json",
+  "setupTasks": [
+    { "name": "Install pnpm", "command": "npm install -g pnpm@10.25.0" },
+    { "name": "Install dependencies", "command": "cd nazoru-poc && pnpm install --frozen-lockfile" }
+  ],
+  "tasks": {
+    "dev": {
+      "name": "Dev server (Astro)",
+      "command": "cd nazoru-poc && pnpm dev --host --allowed-hosts .csb.app",
+      "runAtStart": true,
+      "preview": { "port": 4321 }
+    },
+    "check": {
+      "name": "Type check",
+      "command": "cd nazoru-poc && pnpm check"
+    },
+    "test-unit": {
+      "name": "Unit tests",
+      "command": "cd nazoru-poc && pnpm test:unit"
+    }
+  }
+}
