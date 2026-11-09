@@ -20,6 +20,17 @@ async function panMap(page: Page) {
   await expect(page.locator('[data-lab]')).not.toHaveAttribute('data-camera', before!);
 }
 
+test('public demo uses neutral store branding and sample amenities', async ({ page }) => {
+  await page.goto('/nagoya/map-lab/');
+  await expect(page).toHaveTitle('名古屋のお店を探す｜地図検索プロトタイプ');
+  await expect(page.getByRole('link', { name: 'Map Lab DEMO', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('名古屋のお店を探す');
+  await expect(page.getByLabel('Wi-Fiあり', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('テラス席あり', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('駐車場あり', { exact: true })).toBeVisible();
+  await expect(page.locator('[data-results] .store-card').first()).toContainText('目安予算');
+});
+
 test('standard flow keeps results stable while exploring and commits only on the button', async ({ page }) => {
   await page.goto('/nagoya/map-lab/');
   const list = page.locator('[data-results]');
@@ -177,6 +188,8 @@ test('building cluster exposes all stores through load more and details open in 
   const detail = await popup;
   await expect(detail).toHaveURL(/\/map-lab\/stores\/store-/);
   await expect(detail.getByRole('heading', { level: 1 })).toContainText('錦');
+    await expect(detail.getByRole('link', { name: 'Map Lab DEMO', exact: true })).toBeVisible();
+    await expect(detail.locator('.eyebrow').first()).toHaveText('SAMPLE STORE DETAIL');
   await detail.close();
 });
 

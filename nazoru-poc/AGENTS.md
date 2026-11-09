@@ -8,6 +8,10 @@ astro dev --background
 
 Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
 
+## Public demo content
+
+Use neutral branding and fictional sample data in this public repository. Do not include client names, logos, business-specific source material, private document references, or identifying URLs in code, tests, assets, documentation, or commit messages.
+
 ## Documentation
 
 Full documentation: https://docs.astro.build

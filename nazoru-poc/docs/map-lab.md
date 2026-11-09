@@ -4,7 +4,7 @@
 
 Provide a configurable, locally testable map prototype at `/nagoya/map-lab/`. Existing rental examples remain available. All sample stores, addresses, prices and district boundaries are illustrative, deterministic sample data.
 
-Default: map closed; pins refresh after map movement settles; the regular results list refreshes only on 「このエリアの店舗情報を表示」. category and preference filters apply to both queries. The committed search, current viewport and selected pin are independent. Changing a district fits the filtered stores (or district bounds for zero results); changing other filters does not move the map. Closing/reopening preserves the camera and does not commit exploration.
+Default: map closed; pins refresh after map movement settles; the regular results list refreshes only on 「このエリアの店舗情報を表示」. Category and preference filters apply to both queries. The committed search, current viewport and selected pin are independent. Changing a district fits the filtered stores (or district bounds for zero results); changing other filters does not move the map. Closing/reopening preserves the camera and does not commit exploration.
 
 Pin interactions remain experimental: none, compact preview or half-modal. Cluster interaction is independently zoom or show its stores. A cluster configured to show stores still opens a half-modal when individual pin previews are disabled. Gray/pink membership refers to the entire committed result set, not the current pagination page. Selected pins are red and receive an additional outline. Proximity clusters never mix result membership; identical locations remain grouped at every zoom. Separate coincident groups receive visual offsets without changing their geographic coordinates.
 
@@ -34,7 +34,7 @@ Always validate query inputs and preserve working results on errors. Never commi
 ## Verification — November 9, 2026
 
 - `rtk pnpm test:unit`: 81 tests passed.
-- `rtk pnpm exec playwright test --workers=2`: 68 tests passed, including the original 46 tests. The command also builds the production app.
+- `rtk pnpm exec playwright test --workers=2`: 69 tests passed, including the original 46 tests and neutral demo content checks. The command also builds the production app.
 - `rtk pnpm check`: no errors, warnings or hints.
 - The new flows cover all four pin/list refresh combinations, three individual pin actions, cluster zoom and full selection pagination, filter races, failures, shared camera/settings, radius, keyboard drawing and pointer tracing.
 - Mobile screenshot inspected at 390 pixels; live layouts checked at 320, 768, 1024 and 1440 pixels without horizontal overflow. Automated accessibility checks pass. Real-device and assistive-technology testing remains outside this local verification.
