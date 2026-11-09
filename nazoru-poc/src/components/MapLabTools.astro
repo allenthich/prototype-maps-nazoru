@@ -1,0 +1,32 @@
+<div class="map-tools">
+  <details data-radius-tool hidden>
+    <summary>◎ 半径で指定</summary>
+    <div class="radius-controls">
+      <label>中心<select name="radius-origin" data-radius-origin><option value="point">地図の中心</option><option value="here">現在地</option></select></label>
+      <label>半径<select name="radius-metres" data-radius><option value="500">500m</option><option value="1000" selected>1km</option><option value="2000">2km</option></select></label>
+      <button type="button" data-action="radius">この半径で検索</button>
+    </div>
+  </details>
+  <div class="drawing-buttons" data-drawing-tools hidden>
+    <button type="button" data-action="trace" aria-pressed="false" aria-controls="lab-trace-controls">なぞる</button>
+    <button type="button" data-action="crosshair" aria-pressed="false" aria-controls="lab-crosshair-controls">十字で範囲指定</button>
+  </div>
+</div>
+<div id="lab-trace-controls" class="mode-controls" data-trace-controls hidden>
+  <p>指やマウスで範囲を囲むと検索します。Escキーまたは「キャンセル」で終了。ドラッグを使わずに指定するには「十字で範囲指定」を選んでください。</p>
+  <button type="button" data-action="cancel">キャンセル</button>
+</div>
+<div id="lab-crosshair-controls" class="mode-controls" data-crosshair-controls hidden>
+  <p>矢印キーか移動ボタンで地図を動かして頂点を追加します。3点以上で「完了」。Escキーでキャンセルできます。</p>
+  <div class="crosshair-actions">
+    <div class="pan-pad" role="group" aria-label="地図を移動">
+      <button type="button" class="up" data-action="pan-up">上へ</button><button type="button" class="left" data-action="pan-left">左へ</button>
+      <button type="button" class="right" data-action="pan-right">右へ</button><button type="button" class="down" data-action="pan-down">下へ</button>
+    </div>
+    <div class="vertex-actions">
+      <button type="button" data-action="add-vertex">頂点を追加</button><button type="button" data-action="undo-vertex">元に戻す</button>
+      <button type="button" data-action="finish">完了</button><button type="button" data-action="cancel">キャンセル</button>
+      <p data-vertex-status>頂点：0点</p>
+    </div>
+  </div>
+</div>

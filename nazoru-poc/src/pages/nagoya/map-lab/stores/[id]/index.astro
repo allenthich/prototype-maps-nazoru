@@ -1,0 +1,14 @@
+---
+import { getStores } from '../../../../../prototype/stores.server';
+import { storeCard } from '../../../../../prototype/cards';
+import { districtName, categoryName } from '../../../../../prototype/catalog';
+import '../../../../../prototype/lab.css';
+const store = getStores().find(s => s.id === Astro.params.id);
+if (!store) return Astro.rewrite('/404/');
+---
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><meta name="robots" content="noindex, follow" /><title>{store.name}｜サンプル店舗詳細</title></head>
+<body><header class="lab-header"><a class="lab-brand" href="/nagoya/map-lab/">Map Lab <span>DEMO</span></a><span class="prototype-badge">地図検索 PROTOTYPE</span></header>
+<main class="detail-main"><p class="eyebrow">SAMPLE STORE DETAIL</p><h1>{store.name}</h1><p>{districtName(store.districtId)} · {categoryName(store.category)}</p><div set:html={storeCard(store)} />
+<h2>お店について</h2><p>{store.description}</p><h2>所在地</h2><p>{store.address}<br />{store.building}</p>
+<p class="detail-notice">この店舗は操作検証用の架空データです。価格・設備・住所はサンプルで、実在する店舗や販売情報を示すものではありません。</p><p><a href="/nagoya/map-lab/">地図検索プロトタイプへ</a></p></main></body></html>

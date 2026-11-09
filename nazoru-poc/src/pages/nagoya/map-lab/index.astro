@@ -1,0 +1,85 @@
+---
+import { GOOGLE_MAPS_API_KEY, GOOGLE_MAPS_MAP_ID } from 'astro:env/server';
+import MapLabSettings from '../../../components/MapLabSettings.astro';
+import MapLabTools from '../../../components/MapLabTools.astro';
+import { jsonForScript } from '../../../lib/seo';
+import { DISTRICTS, CATEGORIES, PREFERENCES } from '../../../prototype/catalog';
+import { readConfig } from '../../../prototype/config';
+import { storeCards } from '../../../prototype/cards';
+import { getStores } from '../../../prototype/stores.server';
+import { fitViewport, paginate, parseRequest, scopeLabel, searchStores } from '../../../prototype/search';
+import '../../../prototype/lab.css';
+
+const params = new URLSearchParams(Astro.url.searchParams);
+if (params.has('district')) params.set('scope', new URLSearchParams({ districts: params.getAll('district').join(',') }).toString());
+let state;
+let error = '';
+try { state = parseRequest(params); } catch (e) { error = (e as Error).message; state = parseRequest(new URLSearchParams()); Astro.response.status = 400; }
+const { scope, filters, page } = state;
+const config = readConfig(params);
+const matches = searchStores(getStores(), scope, filters);
+const result = { ...paginate(matches, page), fitBounds: fitViewport(scope, matches) };
+const bootstrap = { scope, filters, config, result };
+---
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, follow" />
+    <title>名古屋のお店を探す｜地図検索プロトタイプ</title>
+    <meta name="description" content="エリアや条件でお店を探し、地図で周辺のお店を確認。地図検索の動作を組み合わせて試せるプロトタイプです。" />
+    <link rel="icon" href="/favicon.svg" />
+  </head>
+  <body class="map-lab-page">
+    <a class="skip-link" href="#lab-main">本文へスキップ</a>
+    <header class="lab-header"><a class="lab-brand" href="/nagoya/map-lab/">Map Lab <span>DEMO</span></a><span class="prototype-badge">地図検索 PROTOTYPE</span><a class="legacy-link" href="/nagoya/">従来のデモ ↗</a></header>
+    <main id="lab-main" tabindex="-1" data-lab data-map-state="idle" data-pin-state="idle" data-list-state="ready" data-api-key={GOOGLE_MAPS_API_KEY} data-map-id={GOOGLE_MAPS_MAP_ID}>
+      <div class="lab-intro"><div><p class="eyebrow">NAGOYA · MAP SEARCH</p><h1>名古屋のお店を探す</h1><p>条件で絞って、地図で周辺のお店もチェック。</p></div><span class="sample-note">架空の店舗データで検証中</span></div>
+      <section class="experiment-panel" aria-label="動作の比較"><MapLabSettings /></section>
+      <form class="store-filters" method="get" data-filters aria-label="店舗の検索条件">
+        <div class="filter-topline"><h2>検索条件</h2><span>条件を変えると一覧とピンに反映されます</span></div>
+        <fieldset class="district-filter"><legend>エリア <small>複数選択OK</small></legend><div class="filter-chips">
+          {DISTRICTS.map(d => <label><input type="checkbox" name="district" value={d.id} checked={scope.kind === 'districts' && scope.ids.includes(d.id)} /><span>{d.name}</span></label>)}
+        </div></fieldset>
+        <div class="filter-bottom"><label class="category-filter">カテゴリ<select name="category" aria-label="カテゴリ"><option value="all" selected={filters.category === 'all'}>すべてのカテゴリ</option>{CATEGORIES.map(g => <option value={g.id} selected={g.id === filters.category}>{g.name}</option>)}</select></label>
+          <fieldset><legend>こだわり条件</legend><div class="preference-checks">{PREFERENCES.map(p => <label><input type="checkbox" name="pref" value={p.id} checked={filters.preferences.includes(p.id)} />{p.name}</label>)}</div></fieldset>
+          <button type="submit" class="filter-submit">条件を適用</button>
+        </div>
+      </form>
+      <p class="lab-error" role="alert" data-error>{error}</p>
+      <section class="map-section" aria-labelledby="lab-map-heading">
+        <div class="map-section-header"><div><h2 id="lab-map-heading">地図で位置を確認</h2><p data-map-description>地図を動かして周辺をチェック。一覧の更新はボタンから。</p></div><button type="button" class="map-toggle" data-map-toggle aria-expanded={config.mapOpen} aria-controls="lab-map-body">{config.mapOpen ? '地図を閉じる' : '地図を開く'}</button></div>
+        <div id="lab-map-body" hidden={!config.mapOpen}>
+          <MapLabTools />
+          <p class="lab-error" role="alert" data-map-error></p>
+          <a href="#lab-results-heading" class="map-skip">地図をスキップして店舗一覧へ ↓</a>
+          <div class="lab-map-frame" data-map-frame data-height={config.mapHeight}>
+            <div class="lab-map-canvas" data-map-canvas></div>
+            <div class="map-loading" data-map-loading><span class="loading-dot"></span><p>地図を読み込んでいます…</p></div>
+            <div class="map-search-wrap"><button type="button" class="map-search-button" data-action="search-bounds" disabled>このエリアの店舗情報を表示</button></div>
+            <div class="crosshair" data-crosshair hidden aria-hidden="true"></div>
+            <div class="trace-overlay" data-trace-overlay hidden><svg aria-hidden="true" focusable="false"><polyline class="casing" /><polyline class="ink" /></svg></div>
+          </div>
+          <div class="map-footer"><div class="pin-legend"><span><i class="legend-dot pink"></i>一覧の店舗</span><span data-context-legend><i class="legend-dot gray"></i>周辺の店舗</span><span><i class="legend-dot red"></i>選択中</span></div><span data-pin-status>地図を開くとピンを表示します</span></div>
+          <p class="map-empty" data-map-empty hidden>この表示範囲に条件に合うお店がありません。地図を動かすか、検索条件を変更してください。</p>
+        </div>
+        <noscript><p class="no-js-message">地図の操作にはJavaScriptが必要です。検索条件と店舗一覧はこのまま利用できます。</p></noscript>
+      </section>
+      <section class="store-results" aria-labelledby="lab-results-heading" data-results>
+        <div class="results-heading"><div><p class="eyebrow">SEARCH RESULTS</p><h2 id="lab-results-heading" tabindex="-1">店舗情報一覧 <span data-results-count>{result.total}</span><small>件</small></h2></div><span class="search-scope" data-results-scope>{scopeLabel(scope)}</span></div>
+        <p class="results-note" data-results-note>地図を動かしても、この一覧は変わりません。</p>
+        <div class="store-grid" data-result-cards set:html={storeCards(result.items)} />
+        <p class="results-empty" data-results-empty hidden={result.total > 0}>条件に合うお店がありません。エリアやこだわり条件を変更して探してみてください。</p>
+        <nav class="lab-pagination" aria-label="店舗一覧のページ送り"><button type="button" data-list-prev disabled={result.page <= 1}>← 前へ</button><span data-page-label>{result.page} / {result.pageCount} ページ</span><button type="button" data-list-next disabled={result.page >= result.pageCount}>次へ →</button></nav>
+      </section>
+      <dialog class="store-dialog" aria-labelledby="selection-title" data-selection>
+        <div class="selection-header"><div><p class="eyebrow">SELECTED LOCATION</p><h2 id="selection-title" data-selection-title>この場所のお店</h2></div><button type="button" class="dialog-close" data-selection-close aria-label="店舗プレビューを閉じる">×</button></div>
+        <div class="selection-scroll" data-selection-scroll><p class="selection-caption" data-selection-caption></p><div class="selection-cards" data-selection-cards></div><p class="selection-error" role="alert" data-selection-error></p><button type="button" class="selection-more" data-selection-more hidden>さらに表示</button></div>
+      </dialog>
+      <div class="toast" role="status" aria-live="polite" data-announcer></div>
+      <script type="application/json" is:inline data-lab-bootstrap set:html={jsonForScript(bootstrap)} />
+    </main>
+    <footer class="lab-footer"><strong>地図検索プロトタイプ</strong><p>店舗・予算・住所・エリア区分はすべて検証用の架空データです。実在する店舗の情報ではありません。</p></footer>
+    <script>import '../../../prototype/controller';</script>
+  </body>
+</html>

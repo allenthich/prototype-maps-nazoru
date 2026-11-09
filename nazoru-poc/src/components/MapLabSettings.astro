@@ -1,0 +1,29 @@
+---
+import { PRESETS } from '../prototype/config';
+---
+<div class="experiment-bar">
+  <div class="preset-buttons" role="group" aria-label="動作プリセット">
+    {Object.entries(PRESETS).map(([id, preset]) => <button type="button" data-preset={id} aria-pressed={id === 'standard'} title={preset.description}>{preset.label}</button>)}
+  </div>
+  <button type="button" class="quiet-button" data-share>この組み合わせを共有 ↗</button>
+</div>
+<div class="share-fallback" hidden data-share-fallback><label for="share-url">共有URL</label><input id="share-url" type="url" readonly data-share-url /></div>
+<details class="experiment-settings">
+  <summary><span>プロトタイプ設定</span><span class="settings-caption" data-config-summary>ピンは自動・一覧はボタンで更新</span></summary>
+  <p class="settings-help">組み合わせを切り替えて、使いやすい動作を比較できます。ピンタップとクラスタタップは検討用の設定です。</p>
+  <div class="settings-grid">
+    <label>ピンの更新<select name="ui_pinRefresh" data-config="pinRefresh"><option value="auto">地図移動後に自動更新</option><option value="search">検索ボタンで更新</option></select></label>
+    <label>店舗一覧の更新<select name="ui_listRefresh" data-config="listRefresh"><option value="manual">検索ボタンで更新</option><option value="auto">地図移動後に自動更新</option></select></label>
+    <label>ピンタップ<select name="ui_pinAction" data-config="pinAction"><option value="none">詳細を表示しない</option><option value="preview">コンパクトなプレビュー</option><option value="sheet">ハーフモーダルで表示</option></select></label>
+    <label>クラスタタップ<select name="ui_clusterAction" data-config="clusterAction"><option value="stores">その場所の店舗を表示</option><option value="zoom">地図を拡大</option></select></label>
+    <label>クラスタリング<select name="ui_clustering" data-config="clustering"><option value="proximity">同じ建物 ＋ 近くの店舗</option><option value="building">同じ建物のみ</option></select></label>
+    <label>地図の高さ<select name="ui_mapHeight" data-config="mapHeight"><option value="standard">標準</option><option value="tall">大きめ</option></select></label>
+  </div>
+  <div class="settings-checks">
+    <label><input type="checkbox" name="ui_mapOpen" data-config="mapOpen" />地図を開いた状態にする</label>
+    <label><input type="checkbox" name="ui_showContext" data-config="showContext" />一覧外の店舗も表示</label>
+    <label><input type="checkbox" name="ui_radius" data-config="radius" />半径検索を表示</label>
+    <label><input type="checkbox" name="ui_trace" data-config="trace" />なぞる・キーボード指定を表示</label>
+  </div>
+  <button type="button" class="quiet-button" data-reset>設定を初期化</button>
+</details>
