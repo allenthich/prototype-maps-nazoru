@@ -4,9 +4,11 @@
 
 Provide a configurable, locally testable map prototype at `/nagoya/map-lab/`. Existing rental examples remain available. All sample stores, addresses, prices and district boundaries are illustrative, deterministic sample data.
 
-Default: map closed; pins refresh after map movement settles; the regular results list refreshes only on 「このエリアの店舗情報を表示」. Category and preference filters apply to both queries. The committed search, current viewport and selected pin are independent. Changing a district fits the filtered stores (or district bounds for zero results); changing other filters does not move the map. Closing/reopening preserves the camera and does not commit exploration.
+Default: map open; pins refresh after map movement settles; the regular results list refreshes only on 「このエリアの店舗情報を表示」. Category and preference filters apply to both queries. The committed search, current viewport and selected pin are independent. Changing a district fits the filtered stores (or district bounds for zero results); changing other filters does not move the map. Closing/reopening preserves the camera and does not commit exploration. Explicit shared visibility settings still override the default.
 
 Pin interactions remain experimental: none, compact preview or half-modal. Cluster interaction is independently zoom or show its stores. A cluster configured to show stores still opens a half-modal when individual pin previews are disabled. Gray/pink membership refers to the entire committed result set, not the current pagination page. Selected pins are red and receive an additional outline. Proximity clusters never mix result membership; identical locations remain grouped at every zoom. Separate coincident groups receive visual offsets without changing their geographic coordinates.
+
+At viewport widths of 1280px and above, settings, filters and results occupy the left column and the map stays on the right while the page scrolls. The map panel fits the viewport and scrolls internally when expanded tools need more space. Smaller screens retain the stacked settings → filters → map → results layout. Map visibility and height settings work in both layouts; resizing preserves the camera and current search.
 
 ## Configuration and contracts
 

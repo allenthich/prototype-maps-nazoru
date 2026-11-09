@@ -132,7 +132,7 @@ export async function createLabMap(host: HTMLElement, initialConfig: LabConfig, 
     setScope: (scope: Scope) => {
       outlines.forEach(o => o.setMap(null));
       const rings = scope.kind === 'districts' ? DISTRICTS.filter(d => scope.ids.includes(d.id)).map(d => [d.sw, { lat: d.ne.lat, lng: d.sw.lng }, d.ne, { lat: d.sw.lat, lng: d.ne.lng }]) : [areaOutline(scope) ?? []];
-      outlines = rings.map(path => new google.maps.Polygon({ map, paths: path, strokeColor: '#124f4a', strokeWeight: 2, strokeOpacity: .85, fillColor: '#176b64', fillOpacity: .025, clickable: false }));
+      outlines = rings.map(path => new google.maps.Polygon({ map, paths: path, strokeColor: '#8f153c', strokeWeight: 2, strokeOpacity: .85, fillColor: '#bc2857', fillOpacity: .025, clickable: false }));
     },
     restoreSelectionFocus: (ids: string[]) => {
       const key = [...groups.values()].find(g => g.ids.some(id => ids.includes(id)))?.key;

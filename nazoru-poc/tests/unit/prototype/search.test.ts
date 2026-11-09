@@ -4,11 +4,11 @@ import { getStores } from '../../../src/prototype/stores.server';
 import { fitViewport, parseRequest, searchStores, viewportPins } from '../../../src/prototype/search';
 
 describe('prototype configuration', () => {
-  it('defaults to live pins and button-controlled results', () => {
-    expect(readConfig(new URLSearchParams())).toMatchObject({ pinRefresh: 'auto', listRefresh: 'manual', mapOpen: false });
+  it('defaults to an open map with live pins and button-controlled results', () => {
+    expect(readConfig(new URLSearchParams())).toMatchObject({ pinRefresh: 'auto', listRefresh: 'manual', mapOpen: true });
   });
   it('round trips a combination of independently selected behaviors', () => {
-    const combination = { ...DEFAULT_CONFIG, pinRefresh: 'search' as const, listRefresh: 'auto' as const, pinAction: 'none' as const, clusterAction: 'zoom' as const, trace: true };
+    const combination = { ...DEFAULT_CONFIG, mapOpen: false, pinRefresh: 'search' as const, listRefresh: 'auto' as const, pinAction: 'none' as const, clusterAction: 'zoom' as const, trace: true };
     expect(readConfig(writeConfig(new URLSearchParams(), combination))).toEqual(combination);
   });
   it('ignores unknown configuration values without losing valid overrides', () => {

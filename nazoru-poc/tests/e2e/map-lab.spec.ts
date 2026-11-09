@@ -33,6 +33,8 @@ test('public demo uses neutral store branding and sample amenities', async ({ pa
 
 test('standard flow keeps results stable while exploring and commits only on the button', async ({ page }) => {
   await page.goto('/nagoya/map-lab/');
+  await expect(page.getByRole('button', { name: '地図を閉じる', exact: true })).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('#lab-map-body')).toBeVisible();
   const list = page.locator('[data-results]');
   const before = await list.innerText();
   await openMap(page);
@@ -54,7 +56,12 @@ test('map close/reopen retains the camera and does not commit exploration', asyn
   const camera = await page.locator('[data-lab]').getAttribute('data-camera');
   await page.getByRole('button', { name: '地図を閉じる', exact: true }).click();
   await expect(page.locator('[data-results-scope]')).toHaveText('錦');
+  await expect(page).toHaveURL(/ui_mapOpen=0/);
+  await page.reload();
+  await expect(page.getByRole('button', { name: '地図を開く', exact: true })).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('#lab-map-body')).not.toBeVisible();
   await page.getByRole('button', { name: '地図を開く', exact: true }).click();
+  await expect(page.locator('[data-lab]')).toHaveAttribute('data-map-state', 'ready', { timeout: 25000 });
   await expect(page.locator('[data-lab]')).toHaveAttribute('data-camera', camera!);
 });
 
@@ -87,6 +94,7 @@ test('settings round trip through a URL and can be reset', async ({ page }) => {
   await page.getByRole('button', { name: '設定を初期化' }).click();
   await expect(page.getByLabel('ピンタップ')).toHaveValue('sheet');
   await expect(page.getByLabel('半径検索を表示')).not.toBeChecked();
+  await expect(page.getByRole('button', { name: '地図を閉じる', exact: true })).toHaveAttribute('aria-expanded', 'true');
 });
 
 test('a shared camera survives initial loading and a full reload', async ({ page }) => {

@@ -12,7 +12,7 @@ export interface LabConfig {
 }
 
 export const DEFAULT_CONFIG: LabConfig = {
-  mapOpen: false, pinRefresh: 'auto', listRefresh: 'manual', pinAction: 'sheet',
+  mapOpen: true, pinRefresh: 'auto', listRefresh: 'manual', pinAction: 'sheet',
   clusterAction: 'stores', clustering: 'proximity', showContext: true,
   radius: false, trace: false, mapHeight: 'standard',
 };
