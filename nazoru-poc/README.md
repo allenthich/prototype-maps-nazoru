@@ -1,5 +1,7 @@
 # なぞる area search — SEO-forward, accessible web PoC
 
+**Configurable store map:** open [`/nagoya/map-lab/`](http://localhost:4321/nagoya/map-lab/) to compare automatic pins, manual/live results, pin previews, cluster interactions, radius and tracing. The default follows the standard automatic-pins/button-controlled-results flow. Expand 「プロトタイプ設定」 to combine behaviors, or use the three presets. 「この組み合わせを共有」 copies filters, settings and map position. All store data is fictional. See [the prototype specification](docs/map-lab.md).
+
 A proof of concept for property search on the web: a finger-traced ("なぞる") map area search built with **Astro 7** and **Google Maps JS**, that is also **SEO-first** and targets **WCAG 2.2 AA**. All data is synthetic, covering central Nagoya.
 
 - Spec: [SPEC.md](SPEC.md) · Plan, spike results and deviations: [PLAN.md](PLAN.md)
